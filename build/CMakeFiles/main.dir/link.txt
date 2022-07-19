@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/main.dir/lib_algorithms/algorithms.cpp.o CMakeFiles/main.dir/lib_matrix/matrix.cpp.o CMakeFiles/main.dir/main.cpp.o  -o main 

@@ -1,0 +1,42 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/algorithms.h
+matrix.h
+../include/matrix.h
+
+../include/matrix.h
+iostream
+-
+iomanip
+-
+cassert
+-
+vector
+-
+
+/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/lib_matrix/matrix.cpp
+iostream
+-
+iomanip
+-
+vector
+-
+cassert
+-
+matrix.h
+/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/lib_matrix/matrix.h
+
+/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/main.cpp
+iostream
+-
+matrix.h
+/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/matrix.h
+algorithms.h
+/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/algorithms.h
+
