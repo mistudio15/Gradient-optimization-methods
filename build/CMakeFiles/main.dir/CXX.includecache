@@ -7,8 +7,6 @@
 #IncludeRegexTransform: 
 
 ../include/algorithms.h
-matrix.h
-../include/matrix.h
 
 ../include/matrix.h
 iostream
@@ -23,18 +21,6 @@ algorithm
 -
 iterator
 -
-
-/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/lib_matrix/matrix.cpp
-iostream
--
-iomanip
--
-vector
--
-cassert
--
-matrix.h
-/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/lib_matrix/matrix.h
 
 /mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/main.cpp
 iostream

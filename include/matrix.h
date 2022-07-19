@@ -6,44 +6,38 @@
 #include <algorithm>
 #include <iterator>
 
+namespace Linalg
+{
+
 template <class U>
 class Matrix
 {
 public:
+    // constructor
     Matrix() = default;
     Matrix(size_t nRows_, size_t nCols_) : matrix(nRows_, std::vector<U>(nCols_, 0)), nRows(nRows_), nCols(nCols_) {};
     explicit Matrix(std::vector<std::vector<U>> const &matrix_) : matrix(matrix_), nRows(matrix.size()), nCols(matrix[0].size()) {};
+    // move
     Matrix(std::vector<std::vector<U>> &&matrix_) : matrix(std::move(matrix_)), nRows(matrix.size()), nCols(matrix[0].size()) {};
-    Matrix(Matrix &&other);
-    Matrix(Matrix<U> const &other);
+    Matrix(Matrix &&other) : matrix(std::move(other.matrix)), nRows(other.nRows), nCols(other.nCols) {};
+    // copy
+    Matrix(Matrix<U> const &other) : matrix(other.matrix), nRows(other.nRows), nCols(other.nCols);
     Matrix& operator=(Matrix<U> other);
 
     void Show();
-
-
-    Matrix operator*(Matrix const &other) const;
-    Matrix operator-(Matrix const &other) const;
     Matrix T() const;
-    std::vector<U> &operator[](int index) const;
     size_t GetRows() const { return nRows; }
     size_t GetCols() const { return nCols; }
     ~Matrix() { std::cout << "destr()" << std::endl; }
-
-    template <class T>
-    Matrix operator*(T a) const
-    {
-        Matrix<U> aMatrix(GetRows(), GetCols());
-        std::transform(matrix.begin(), matrix.end(), aMatrix.matrix.begin(), [a](std::vector<U> const &row){
-            return row * a;
-        });
-        return aMatrix;
-    }
-
-    template <class T>
-    friend Matrix operator*(T a, Matrix<U> const &original)
-    {
-        return original * a;
-    }
+    
+    Matrix operator*(Matrix const &other) const;
+    Matrix &operator-=(Matrix const &other);
+    Matrix &operator+=(Matrix const &other);
+    std::vector<U> &operator[](int index) const;
+    template <class V>
+    Matrix &operator*=(V a);
+    template <class V>
+    Matrix &operator/=(V a);
 private:
     std::vector<std::vector<U>> matrix;
     size_t nRows;
@@ -51,77 +45,120 @@ private:
     void swap(Matrix<U> &other);
 };
 
+
+// vector functions
+
 template <class U, class T>
-std::vector<U> operator*(std::vector<U> vec, T a)
+std::vector<U> &operator*=(std::vector<U> &vec, T a)
 {
     std::for_each(vec.begin(), vec.end(), [a](U &elem){
-        elem = elem * a;
+        elem *= a;
+    });
+    return vec;
+}
+
+template <class U, class T>
+std::vector<U> &operator/=(std::vector<U> &vec, T a)
+{
+    std::for_each(vec.begin(), vec.end(), [a](U &elem){
+        elem /= a;
     });
     return vec;
 }
 
 template <class U>
-Matrix<U>::Matrix(Matrix &&other)
+std::vector<U> &operator-=(std::vector<U> &vecLeft, std::vector<U> const &vecRight)
 {
-    matrix = std::move(other.matrix);
-    nRows = nRows;
-    nCols = nCols;
+    std::transform(vecLeft.cbegin(), vecLeft.cend(), vecRight.cbegin(), vecLeft.begin(), std::minus<U>{});
+    return vecLeft;
 }
 
 template <class U>
-void Matrix<U>::swap(Matrix<U> &other)
+std::vector<U> &operator+=(std::vector<U> &vecLeft, std::vector<U> const &vecRight)
 {
-    std::swap(matrix, other.matrix);
-    std::swap(nRows, other.nRows);
-    std::swap(nCols, other.nCols);
+    std::transform(vecLeft.cbegin(), vecLeft.cend(), vecRight.cbegin(), vecLeft.begin(), std::plus<U>{});
+    return vecLeft;
 }
 
-template <class U>
-Matrix<U>::Matrix(Matrix<U> const &other)
-{
-    matrix = other.matrix;
-    nRows = other.nRows;
-    nCols = other.nCols;
-}
+// end vector functions
 
 template <class U>
-Matrix<U>& Matrix<U>::operator=(Matrix<U> other)
+template <class V>
+Matrix<U> &Matrix<U>::operator*=(V a)
 {
-    swap(other);
+    std::transform(matrix.begin(), matrix.end(), matrix.begin(), [a](std::vector<U> &row){
+        return (row *= a);
+    });
     return *this;
 }
 
 template <class U>
-void Matrix<U>::Show()
+template <class V>
+Matrix<U> &Matrix<U>::operator/=(V a)
 {
-    for (std::vector<U> &row : matrix)
-    {
-        for (U &elem : row)
-        {
-            std::cout << std::setw(5) <<  elem << " "; 
-        }
-        std::cout << std::endl;
-    }
+    std::transform(matrix.begin(), matrix.end(), matrix.begin(), [a](std::vector<U> &row){
+        return (row /= a);
+    });
+    return *this;
+}
+
+template <class U>
+Matrix<U> &Matrix<U>::operator-=(Matrix const &other)
+{
+    assert(this->GetRows() == other.GetRows() && this->GetCols() == other.GetCols());
+    std::transform(matrix.begin(), matrix.end(), other.matrix.cbegin(), matrix.begin(), [](std::vector<U> &left, std::vector<U> const &right){
+        return (left -= right);
+    });
+    return *this;
+}
+
+template <class U>
+Matrix<U> &Matrix<U>::operator+=(Matrix const &other)
+{
+    assert(this->GetRows() == other.GetRows() && this->GetCols() == other.GetCols());
+    std::transform(matrix.begin(), matrix.end(), other.matrix.cbegin(), matrix.begin(), [](std::vector<U> &left, std::vector<U> const &right){
+        return (left += right);
+    });
+    return *this;
+}
+
+template <class U>
+Matrix<U> operator-(Matrix<U> left, Matrix<U> const &right)
+{
+    assert(left.GetRows() == right.GetRows() && left.GetCols() == right.GetCols());
+    return left -= right;
+}
+
+template <class U>
+Matrix<U> operator+(Matrix<U> left, Matrix<U> const &right)
+{
+    assert(left.GetRows() == right.GetRows() && left.GetCols() == right.GetCols());
+    return left += right;
+}
+
+template <class U, class V>
+Matrix<U> operator*(Matrix<U> left, V a)
+{
+    return left *= a;
+}
+
+template <class U, class V>
+Matrix<U> operator*(V a, Matrix<U> const &right)
+{
+    return right * a;
+}
+
+
+template <class U, class V>
+Matrix<U> operator/(Matrix<U> left, V a)
+{
+    return left /= a;
 }
 
 template <class U>
 std::vector<U> &Matrix<U>::operator[](int index) const
 {
     return const_cast<std::vector<U> &>(matrix[index]);
-}
-
-template <class U>
-Matrix<U> Matrix<U>::T() const
-{
-    Matrix<U> tMatrix(GetCols(), GetRows());
-    for (size_t i = 0; i < GetRows(); i++)
-    {
-        for (size_t j = 0; j < GetCols(); j++)
-        {
-            tMatrix[j][i] = matrix[i][j];
-        }
-    }
-    return tMatrix;
 }
 
 // на курсовой реализовать Штрассена
@@ -148,16 +185,45 @@ Matrix<U> Matrix<U>::operator*(Matrix<U> const &other) const
 }
 
 template <class U>
-Matrix<U> Matrix<U>::operator-(Matrix const &other) const
+Matrix<U>& Matrix<U>::operator=(Matrix<U> other)
 {
-    assert(this->GetRows() == other.GetRows() && this->GetCols() == other.GetCols());
-    Matrix<U> diffMatrix(GetCols(), GetRows());
-    for (size_t i = 0; i < GetRows(); ++i)
+    swap(other);
+    return *this;
+}
+
+template <class U>
+void Matrix<U>::swap(Matrix<U> &other)
+{
+    std::swap(matrix, other.matrix);
+    std::swap(nRows, other.nRows);
+    std::swap(nCols, other.nCols);
+}
+
+template <class U>
+void Matrix<U>::Show()
+{
+    for (std::vector<U> &row : matrix)
     {
-        for (size_t j = 0; j < GetCols(); ++j)
+        for (U &elem : row)
         {
-            diffMatrix[i][j] = matrix[i][j] - other.matrix[i][j];
+            std::cout << std::setw(5) <<  elem << " "; 
+        }
+        std::cout << std::endl;
+    }
+}
+
+template <class U>
+Matrix<U> Matrix<U>::T() const
+{
+    Matrix<U> tMatrix(GetCols(), GetRows());
+    for (size_t i = 0; i < GetRows(); i++)
+    {
+        for (size_t j = 0; j < GetCols(); j++)
+        {
+            tMatrix[j][i] = matrix[i][j];
         }
     }
-    return diffMatrix;
+    return tMatrix;
+}
+
 }
