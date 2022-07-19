@@ -19,6 +19,10 @@ cassert
 -
 vector
 -
+algorithm
+-
+iterator
+-
 
 /mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/lib_matrix/matrix.cpp
 iostream

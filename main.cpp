@@ -5,21 +5,28 @@
 
 int main()
 {
-    Matrix<int> m({
-        {1, 2},
-        {4, 5},
-        {7, 8}
-    });
+    Matrix<float> m = {
+        {
+            {1, 2},
+            {4, 5},
+            {7, 8}
+        }
+    };
     m.Show();
-    puts("");
-    Matrix<int> h({
-        {3, 2, 5},
-        {2, 1, 2}
-    });
-    puts("");
-    h.Show();
-    puts("");
-    h.T().Show();
-    Matrix<int> mh = m * h;
-    mh.Show();
+    m = 4 * m;
+    m.Show();
+    // Matrix<int> h = {
+    //     {
+    //         {3, 2, 5},
+    //         {2, 1, 2}
+    //     }
+    // };
+
+    // Matrix<int> hT = h.T();
+    // puts("________________");
+    // hT.Show();
+    // // h.T().Show();
+    // Matrix<int> mh = m * h;
+    // mh.Show();
+    
 }
