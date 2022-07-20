@@ -7,6 +7,20 @@
 #IncludeRegexTransform: 
 
 ../include/algorithms.h
+functional
+-
+algorithm
+-
+cassert
+-
+cmath
+-
+cstdlib
+-
+ctime
+-
+matrix.h
+../include/matrix.h
 
 ../include/matrix.h
 iostream
@@ -19,11 +33,45 @@ vector
 -
 algorithm
 -
+numeric
+-
+string
+-
 iterator
 -
 
+/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/lib_algorithms/algorithms.cpp
+functional
+-
+algorithm
+-
+cmath
+-
+cstdlib
+-
+ctime
+-
+algorithms.h
+/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/lib_algorithms/algorithms.h
+matrix.h
+/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/lib_algorithms/matrix.h
+
+/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/lib_matrix/matrix.cpp
+iostream
+-
+iomanip
+-
+vector
+-
+cassert
+-
+matrix.h
+/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/lib_matrix/matrix.h
+
 /mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/main.cpp
 iostream
+-
+functional
 -
 matrix.h
 /mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/matrix.h

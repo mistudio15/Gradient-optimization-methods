@@ -1,38 +1,27 @@
-// #pragma once
+#pragma once
 
-// #include "matrix.h"
+#include <functional>
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
 
-// class GradientDescent
-// {
-// public:
-//     GradientDescent(float lr_ = 0.1) : lr(lr_) {};
-//     template <class U>
-//     void Fit(Matrix<U> const &X_train, Matrix<U> const &y_train) 
-//     {
-//         w(X_train.GetCols(), 0);
-//         for (size_t i = 0; i < 10; ++i)
-//         {
-//             Matrix<float> f = X_train * w;
-//             Matrix<float> grad = X_train.T() * (y_train - f) * 2;
-//             w = w - grad * lr; 
-//         }
-//         /*
-//         a * Matrix
-//         -=
-//         Реализовать много операторов
-//         Matrix заменить на универсальное название, представляющее вектор и матрицу
+#include "matrix.h"
 
-//         vector<float> grad = 2 * X.T() * (y - f);
-//         w -= lr * grad; 
-//         */
-//     }
-//     Matrix<float> Predict(Matrix<float> const &X_test) const
-//     {
-//         return X_test * w;
-//     }
+using std::cout;
+using std::endl;
 
-// private:
-//     float lr;
-//     // вектор транспонирован (для оптимизации хранения)
-//     Matrix<float> w;
-// };
+double FindExtremum(std::function<double(double)> const &df, std::function<double(double const &, double const &)> const &BinOp, double eps = 0.001);
+
+class GradientDescent
+{
+public:
+    GradientDescent(double lr_ = 0.0001) : lr(lr_) {};
+    void Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> const &y_train);
+    Linalg::Matrix<double> Predict(Linalg::Matrix<double> const &X_test) const;
+private:
+    double lr;
+    Linalg::Matrix<double> w;
+};
+

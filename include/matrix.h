@@ -4,6 +4,8 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
+#include <numeric>
+#include <string>
 #include <iterator>
 
 namespace Linalg
@@ -21,14 +23,20 @@ public:
     Matrix(std::vector<std::vector<U>> &&matrix_) : matrix(std::move(matrix_)), nRows(matrix.size()), nCols(matrix[0].size()) {};
     Matrix(Matrix &&other) : matrix(std::move(other.matrix)), nRows(other.nRows), nCols(other.nCols) {};
     // copy
-    Matrix(Matrix<U> const &other) : matrix(other.matrix), nRows(other.nRows), nCols(other.nCols);
+    Matrix(Matrix<U> const &other) : matrix(other.matrix), nRows(other.nRows), nCols(other.nCols) {};
     Matrix& operator=(Matrix<U> other);
+    // инициализация через лист инициализации (вектор)
+    // Matrix<U>& Matrix<U>::operator=(std::vector<U> vec);
 
-    void Show();
+    // реализовать fill со значениями генерируемыми функтором 
+    void Assign(size_t nRows_, size_t nCols_, U fill_value = 0);
+
+    void Show(std::string message = std::string{}) const;
     Matrix T() const;
+    U Sum() const;
     size_t GetRows() const { return nRows; }
     size_t GetCols() const { return nCols; }
-    ~Matrix() { std::cout << "destr()" << std::endl; }
+    // ~Matrix() {}
     
     Matrix operator*(Matrix const &other) const;
     Matrix &operator-=(Matrix const &other);
@@ -122,6 +130,8 @@ Matrix<U> &Matrix<U>::operator+=(Matrix const &other)
     return *this;
 }
 
+// no-member
+
 template <class U>
 Matrix<U> operator-(Matrix<U> left, Matrix<U> const &right)
 {
@@ -155,13 +165,15 @@ Matrix<U> operator/(Matrix<U> left, V a)
     return left /= a;
 }
 
+// member
+
 template <class U>
 std::vector<U> &Matrix<U>::operator[](int index) const
 {
     return const_cast<std::vector<U> &>(matrix[index]);
 }
 
-// на курсовой реализовать Штрассена
+// на курсовой реализовать Штрассена при большой матрице
 // происходит ли копирование объекта при возвращение или работает RVO
 template <class U>
 Matrix<U> Matrix<U>::operator*(Matrix<U> const &other) const 
@@ -191,6 +203,21 @@ Matrix<U>& Matrix<U>::operator=(Matrix<U> other)
     return *this;
 }
 
+// template <class U>
+// Matrix<U>& Matrix<U>::operator=(std::vector<U> vec)
+// {
+//     swap(other);
+//     return *this;
+// }
+
+template <class U>
+void Matrix<U>::Assign(size_t nRows_, size_t nCols_, U fill_value)
+{
+    nRows = nRows_;
+    nCols = nCols_;
+    matrix.assign(nRows, std::vector<U>(nCols, fill_value));
+}
+
 template <class U>
 void Matrix<U>::swap(Matrix<U> &other)
 {
@@ -199,12 +226,14 @@ void Matrix<U>::swap(Matrix<U> &other)
     std::swap(nCols, other.nCols);
 }
 
+// сделать через copy std::ostream_iterator
 template <class U>
-void Matrix<U>::Show()
+void Matrix<U>::Show(std::string message) const
 {
-    for (std::vector<U> &row : matrix)
+    std::cout << message << std::endl;
+    for (std::vector<U> const &row : matrix)
     {
-        for (U &elem : row)
+        for (U const &elem : row)
         {
             std::cout << std::setw(5) <<  elem << " "; 
         }
@@ -224,6 +253,15 @@ Matrix<U> Matrix<U>::T() const
         }
     }
     return tMatrix;
+}
+
+template <class U>
+U Matrix<U>::Sum() const
+{
+    return std::accumulate(matrix.begin(), matrix.end(), 0, [](U init, std::vector<U> const &vec){
+        U sum = std::accumulate(vec.begin(), vec.end(), 0);
+        return init + sum;
+    });
 }
 
 }
