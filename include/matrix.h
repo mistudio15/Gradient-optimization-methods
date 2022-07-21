@@ -34,6 +34,7 @@ public:
     void Show(std::string message = std::string{}) const;
     Matrix T() const;
     U Sum() const;
+    Matrix<U> Abs() const;
     size_t GetRows() const { return nRows; }
     size_t GetCols() const { return nCols; }
     // ~Matrix() {}
@@ -262,6 +263,18 @@ U Matrix<U>::Sum() const
         U sum = std::accumulate(vec.begin(), vec.end(), 0);
         return init + sum;
     });
+}
+
+template <class U>
+Matrix<U> Matrix<U>::Abs() const
+{
+    Matrix<U> absMatrix(*this);
+    std::for_each(absMatrix.matrix.begin(), absMatrix.matrix.end(), [](std::vector<U> &vec){
+        std::for_each(vec.begin(), vec.end(), [](U &elem){
+            elem = (elem > 0 ? elem : -elem);
+        });
+    });
+    return absMatrix;
 }
 
 }

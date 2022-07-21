@@ -1,3 +1,0 @@
-/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/build/CMakeFiles/rebuild_cache.dir
-/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/build/CMakeFiles/edit_cache.dir
-/mnt/c/МГТУ/5 семестр/Курсовая/Gradient_code/build/CMakeFiles/main.dir

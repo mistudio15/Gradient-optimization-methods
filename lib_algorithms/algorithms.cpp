@@ -16,7 +16,7 @@ void GradientDescent::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<
     Linalg::Matrix<double> f;
     Linalg::Matrix<double> err;
     Linalg::Matrix<double> grad;
-    int N = 10;
+    int N = 1000000;
     for (size_t i = 0; i < N; ++i)
     {
         f = X_train * w;
@@ -24,7 +24,7 @@ void GradientDescent::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<
 
         err = f - y_train;
         // err.Show("\t\terr");
-        std::cout << err.Sum() << std::endl;
+        std::cout << err.Abs().Sum() << std::endl;
 
         grad = (2 * (X_train.T() * err)) / X_train.GetRows();
         // grad.Show("\t\tgrad");
@@ -32,7 +32,8 @@ void GradientDescent::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<
         w -= lr * grad;
         // w.Show("\t\t-----------------------w");
     }
-
+    w.Show("\t\t-----------------------w");
+    std::cout << "sum = " << err.Abs().Sum() << std::endl; 
 }
 
 Linalg::Matrix<double> GradientDescent::Predict(Linalg::Matrix<double> const &X_test) const
