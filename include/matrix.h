@@ -1,12 +1,6 @@
 #pragma once
-#include <iostream>
-#include <iomanip>
-#include <cassert>
-#include <vector>
-#include <algorithm>
-#include <numeric>
-#include <string>
-#include <iterator>
+
+#include "stdafx.h"
 
 namespace Linalg
 {
@@ -17,7 +11,7 @@ class Matrix
 public:
     // constructor
     Matrix() = default;
-    Matrix(size_t nRows_, size_t nCols_) : matrix(nRows_, std::vector<U>(nCols_, 0)), nRows(nRows_), nCols(nCols_) {};
+    Matrix(size_t nRows_, size_t nCols_, U fill_value = 0) : matrix(nRows_, std::vector<U>(nCols_, fill_value)), nRows(nRows_), nCols(nCols_) {};
     explicit Matrix(std::vector<std::vector<U>> const &matrix_) : matrix(matrix_), nRows(matrix.size()), nCols(matrix[0].size()) {};
     // move
     Matrix(std::vector<std::vector<U>> &&matrix_) : matrix(std::move(matrix_)), nRows(matrix.size()), nCols(matrix[0].size()) {};
@@ -28,8 +22,10 @@ public:
     // инициализация через лист инициализации (вектор)
     // Matrix<U>& Matrix<U>::operator=(std::vector<U> vec);
 
-    // реализовать fill со значениями генерируемыми функтором 
+    // реализовать fill со значениями генерируемыми функтором (мб через variant) 
     void Assign(size_t nRows_, size_t nCols_, U fill_value = 0);
+    // для вектора тоже нужно
+    void Copy(typename std::vector<std::vector<U>>::const_iterator it_first, typename std::vector<std::vector<U>>::const_iterator it_last);
 
     void Show(std::string message = std::string{}) const;
     Matrix T() const;
@@ -37,6 +33,7 @@ public:
     Matrix<U> Abs() const;
     size_t GetRows() const { return nRows; }
     size_t GetCols() const { return nCols; }
+    std::vector<std::vector<U>> &Data() { return matrix; }
     // ~Matrix() {}
     
     Matrix operator*(Matrix const &other) const;
@@ -275,6 +272,15 @@ Matrix<U> Matrix<U>::Abs() const
         });
     });
     return absMatrix;
+}
+
+template <class U>
+void Matrix<U>::Copy(typename std::vector<std::vector<U>>::const_iterator it_first, typename std::vector<std::vector<U>>::const_iterator it_last)
+{
+    matrix.clear();
+    std::copy(it_first, it_last, back_inserter(matrix));
+    nRows = std::distance(it_first, it_last);
+    nCols = (*it_first).size();
 }
 
 }
