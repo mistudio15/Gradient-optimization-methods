@@ -16,3 +16,4 @@
 #include <iterator>
 #include <fstream>
 #include <random>
+#include <initializer_list>

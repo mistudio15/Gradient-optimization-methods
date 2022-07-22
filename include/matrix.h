@@ -12,20 +12,32 @@ public:
     // constructor
     Matrix() = default;
     Matrix(size_t nRows_, size_t nCols_, U fill_value = 0) : matrix(nRows_, std::vector<U>(nCols_, fill_value)), nRows(nRows_), nCols(nCols_) {};
-    explicit Matrix(std::vector<std::vector<U>> const &matrix_) : matrix(matrix_), nRows(matrix.size()), nCols(matrix[0].size()) {};
-    // move
-    Matrix(std::vector<std::vector<U>> &&matrix_) : matrix(std::move(matrix_)), nRows(matrix.size()), nCols(matrix[0].size()) {};
+    // SetData проверяет матрицу на "прямоугольность"
+    Matrix(typename std::vector<std::vector<U>>::const_iterator it_first, typename std::vector<std::vector<U>>::const_iterator it_last) { SetData(it_first, it_last); };
+    explicit Matrix(std::vector<std::vector<U>> const &matrix_) { SetData(matrix_.begin(), matrix_.end()); puts("vec"); };
+
+    // не explicit для model.Predict({{{16, 79, 0, 1}}})
+    Matrix(std::initializer_list<std::initializer_list<U>> const &matrix_) { SetData(matrix_.begin(), matrix_.end()); puts("IList"); }
+
+    // move   (+ может, стоит для vector или init_list сделать)
     Matrix(Matrix &&other) : matrix(std::move(other.matrix)), nRows(other.nRows), nCols(other.nCols) {};
+
     // copy
     Matrix(Matrix<U> const &other) : matrix(other.matrix), nRows(other.nRows), nCols(other.nCols) {};
-    Matrix& operator=(Matrix<U> other);
-    // инициализация через лист инициализации (вектор)
-    // Matrix<U>& Matrix<U>::operator=(std::vector<U> vec);
 
-    // реализовать fill со значениями генерируемыми функтором (мб через variant) 
+    // =
+    Matrix& operator=(Matrix<U> other);
+
     void Assign(size_t nRows_, size_t nCols_, U fill_value = 0);
-    // для вектора тоже нужно
-    void Copy(typename std::vector<std::vector<U>>::const_iterator it_first, typename std::vector<std::vector<U>>::const_iterator it_last);
+    
+    template <class Iter>
+    void SetData(Iter const &it_first, Iter const &it_last);
+    void SetData(std::vector<std::vector<U>> const &matrix_);
+    void SetData(std::initializer_list<std::initializer_list<U>> const &matrix_);
+
+    void AddRow(std::vector<U> const &row);
+    void AddCol(U fill_value);
+    void AddCol(std::vector<U> const &col);
 
     void Show(std::string message = std::string{}) const;
     Matrix T() const;
@@ -34,8 +46,7 @@ public:
     size_t GetRows() const { return nRows; }
     size_t GetCols() const { return nCols; }
     std::vector<std::vector<U>> &Data() { return matrix; }
-    // ~Matrix() {}
-    
+
     Matrix operator*(Matrix const &other) const;
     Matrix &operator-=(Matrix const &other);
     Matrix &operator+=(Matrix const &other);
@@ -51,49 +62,41 @@ private:
     void swap(Matrix<U> &other);
 };
 
-
-// vector functions
-
-template <class U, class T>
-std::vector<U> &operator*=(std::vector<U> &vec, T a)
+template <class U>
+Matrix<U> &Matrix<U>::operator+=(Matrix const &other)
 {
-    std::for_each(vec.begin(), vec.end(), [a](U &elem){
-        elem *= a;
+    assert(this->GetRows() == other.GetRows() && this->GetCols() == other.GetCols());
+    // сложение matrix и other.matrix и запись в matrix
+    std::transform(matrix.begin(), matrix.end(), other.matrix.cbegin(), matrix.begin(), [](std::vector<U> &vecLeft, std::vector<U> const &vecRight){
+        // сложение vecLeft и vecRight и запись в vecLeft
+        std::transform(vecLeft.cbegin(), vecLeft.cend(), vecRight.cbegin(), vecLeft.begin(), std::plus<U>{});
+        return vecLeft;
     });
-    return vec;
-}
-
-template <class U, class T>
-std::vector<U> &operator/=(std::vector<U> &vec, T a)
-{
-    std::for_each(vec.begin(), vec.end(), [a](U &elem){
-        elem /= a;
-    });
-    return vec;
+    return *this;
 }
 
 template <class U>
-std::vector<U> &operator-=(std::vector<U> &vecLeft, std::vector<U> const &vecRight)
+Matrix<U> &Matrix<U>::operator-=(Matrix const &other)
 {
-    std::transform(vecLeft.cbegin(), vecLeft.cend(), vecRight.cbegin(), vecLeft.begin(), std::minus<U>{});
-    return vecLeft;
+    assert(this->GetRows() == other.GetRows() && this->GetCols() == other.GetCols());
+
+    std::transform(matrix.begin(), matrix.end(), other.matrix.cbegin(), matrix.begin(), [](std::vector<U> &vecLeft, std::vector<U> const &vecRight){
+        std::transform(vecLeft.cbegin(), vecLeft.cend(), vecRight.cbegin(), vecLeft.begin(), std::minus<U>{});
+        return vecLeft;
+    });
+    return *this;
 }
 
-template <class U>
-std::vector<U> &operator+=(std::vector<U> &vecLeft, std::vector<U> const &vecRight)
-{
-    std::transform(vecLeft.cbegin(), vecLeft.cend(), vecRight.cbegin(), vecLeft.begin(), std::plus<U>{});
-    return vecLeft;
-}
-
-// end vector functions
 
 template <class U>
 template <class V>
 Matrix<U> &Matrix<U>::operator*=(V a)
 {
     std::transform(matrix.begin(), matrix.end(), matrix.begin(), [a](std::vector<U> &row){
-        return (row *= a);
+        std::for_each(row.begin(), row.end(), [a](U &elem){
+            elem *= a;
+        });
+        return row;
     });
     return *this;
 }
@@ -103,27 +106,10 @@ template <class V>
 Matrix<U> &Matrix<U>::operator/=(V a)
 {
     std::transform(matrix.begin(), matrix.end(), matrix.begin(), [a](std::vector<U> &row){
-        return (row /= a);
-    });
-    return *this;
-}
-
-template <class U>
-Matrix<U> &Matrix<U>::operator-=(Matrix const &other)
-{
-    assert(this->GetRows() == other.GetRows() && this->GetCols() == other.GetCols());
-    std::transform(matrix.begin(), matrix.end(), other.matrix.cbegin(), matrix.begin(), [](std::vector<U> &left, std::vector<U> const &right){
-        return (left -= right);
-    });
-    return *this;
-}
-
-template <class U>
-Matrix<U> &Matrix<U>::operator+=(Matrix const &other)
-{
-    assert(this->GetRows() == other.GetRows() && this->GetCols() == other.GetCols());
-    std::transform(matrix.begin(), matrix.end(), other.matrix.cbegin(), matrix.begin(), [](std::vector<U> &left, std::vector<U> const &right){
-        return (left += right);
+        std::for_each(row.begin(), row.end(), [a](U &elem){
+            elem /= a;
+        });
+        return row;
     });
     return *this;
 }
@@ -274,13 +260,73 @@ Matrix<U> Matrix<U>::Abs() const
     return absMatrix;
 }
 
+
+// если делать move для init_list, то стоит эту функцию изменить
+// matrix.push_back(std::move(*it));
 template <class U>
-void Matrix<U>::Copy(typename std::vector<std::vector<U>>::const_iterator it_first, typename std::vector<std::vector<U>>::const_iterator it_last)
+template <class Iter>
+void Matrix<U>::SetData(Iter const &it_first, Iter const &it_last)
 {
-    matrix.clear();
-    std::copy(it_first, it_last, back_inserter(matrix));
     nRows = std::distance(it_first, it_last);
     nCols = (*it_first).size();
+    matrix.clear();
+    try
+    {
+        for (auto it = it_first; it != it_last; ++it)
+        {
+            if ((*it).size() != nCols)
+            {
+                throw (*it).size();
+            }
+            matrix.push_back(*it);
+        }
+    }
+    catch(size_t nColsOther)
+    {
+        std::cout << "Exception\nWrong number of columns " << nColsOther << std::endl;
+        exit(0);
+    }
+}
+
+template <class U>
+void Matrix<U>::SetData(std::vector<std::vector<U>> const &matrix_)
+{
+    SetData(matrix_.begin(), matrix_.end());
+}
+
+template <class U>
+void Matrix<U>::SetData(std::initializer_list<std::initializer_list<U>> const &matrix_)
+{
+    SetData(matrix_.begin(), matrix_.end());
+}
+
+template <class U>
+void Matrix<U>::AddRow(std::vector<U> const &row)
+{
+    assert(row.size() == GetCols());
+    matrix.push_back(row);
+    nRows++;
+}
+
+template <class U>
+void Matrix<U>::AddCol(U fill_value)
+{
+    for (auto &row : matrix)
+    {
+        row.push_back(fill_value);
+    }
+    nCols++;
+}
+
+template <class U>
+void Matrix<U>::AddCol(std::vector<U> const &col)
+{
+    assert(col.size() == GetRows());
+    for (size_t i = 0; i < col.size(); ++i)
+    {
+        matrix[i].push_back(col[i]);
+    }    
+    nCols++;
 }
 
 }

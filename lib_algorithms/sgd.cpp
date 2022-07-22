@@ -26,11 +26,8 @@ void SGD::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> cons
         auto itY = y_copy.Data().cbegin();
         for (size_t j = B; j < X_copy.GetRows(); j += B)
         {
-            Linalg::Matrix<double> X_batch;
-            Linalg::Matrix<double> y_batch;
-            // нужна инициализация через итераторы
-            X_batch.Copy(itX + (j - B), itX + j);
-            y_batch.Copy(itY + (j - B), itY + j);
+            Linalg::Matrix<double> X_batch(itX + (j - B), itX + j);
+            Linalg::Matrix<double> y_batch(itY + (j - B), itY + j);
             f = X_batch * w;
             err = f - y_batch;
             grad = (2 * (X_batch.T() * err));
