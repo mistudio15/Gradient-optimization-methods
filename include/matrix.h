@@ -14,10 +14,10 @@ public:
     Matrix(size_t nRows_, size_t nCols_, U fill_value = 0) : matrix(nRows_, std::vector<U>(nCols_, fill_value)), nRows(nRows_), nCols(nCols_) {};
     // SetData проверяет матрицу на "прямоугольность"
     Matrix(typename std::vector<std::vector<U>>::const_iterator it_first, typename std::vector<std::vector<U>>::const_iterator it_last) { SetData(it_first, it_last); };
-    explicit Matrix(std::vector<std::vector<U>> const &matrix_) { SetData(matrix_.begin(), matrix_.end()); puts("vec"); };
+    explicit Matrix(std::vector<std::vector<U>> const &matrix_) { SetData(matrix_.begin(), matrix_.end()); };
 
     // не explicit для model.Predict({{{16, 79, 0, 1}}})
-    Matrix(std::initializer_list<std::initializer_list<U>> const &matrix_) { SetData(matrix_.begin(), matrix_.end()); puts("IList"); }
+    Matrix(std::initializer_list<std::initializer_list<U>> const &matrix_) { SetData(matrix_.begin(), matrix_.end()); }
 
     // move   (+ может, стоит для vector или init_list сделать)
     Matrix(Matrix &&other) : matrix(std::move(other.matrix)), nRows(other.nRows), nCols(other.nCols) {};
@@ -42,7 +42,9 @@ public:
     void Show(std::string message = std::string{}) const;
     Matrix T() const;
     U Sum() const;
+    double Mean() const;
     Matrix<U> Abs() const;
+    Matrix<U> Sqr() const;
     size_t GetRows() const { return nRows; }
     size_t GetCols() const { return nCols; }
     std::vector<std::vector<U>> &Data() { return matrix; }
@@ -249,6 +251,12 @@ U Matrix<U>::Sum() const
 }
 
 template <class U>
+double Matrix<U>::Mean() const
+{
+    return static_cast<double>(Sum()) / (nRows * nCols);
+}
+
+template <class U>
 Matrix<U> Matrix<U>::Abs() const
 {
     Matrix<U> absMatrix(*this);
@@ -259,6 +267,19 @@ Matrix<U> Matrix<U>::Abs() const
     });
     return absMatrix;
 }
+
+template <class U>
+Matrix<U> Matrix<U>::Sqr() const
+{
+    Matrix<U> sqrMatrix(*this);
+    std::for_each(sqrMatrix.matrix.begin(), sqrMatrix.matrix.end(), [](std::vector<U> &vec){
+        std::for_each(vec.begin(), vec.end(), [](U &elem){
+            elem *= elem;
+        });
+    });
+    return sqrMatrix;
+}
+
 
 
 // если делать move для init_list, то стоит эту функцию изменить
