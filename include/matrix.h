@@ -59,8 +59,8 @@ public:
     Matrix &operator/=(V a);
 private:
     std::vector<std::vector<U>> matrix;
-    size_t nRows;
-    size_t nCols;
+    size_t nRows = 0;
+    size_t nCols = 0;
     void swap(Matrix<U> &other);
 };
 
@@ -324,8 +324,12 @@ void Matrix<U>::SetData(std::initializer_list<std::initializer_list<U>> const &m
 template <class U>
 void Matrix<U>::AddRow(std::vector<U> const &row)
 {
-    assert(row.size() == GetCols());
+    assert(nRows == 0 || row.size() == GetCols());
     matrix.push_back(row);
+    if (nRows == 0)
+    {
+        nCols = row.size();
+    }
     nRows++;
 }
 
