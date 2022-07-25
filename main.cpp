@@ -10,6 +10,11 @@
 
 
 /*
+    - Sum Mean Sqr сделать по столбцам, а не в общем
+    - MSE MAE должно принимать y_test и y_pred
+*/
+
+/*
     Задачи
     + инициализация матрицы через итераторы
     + Copy через вектор (мб не Copy)
@@ -25,31 +30,48 @@
 
 */
 
+/*
+    Test dataset excel
+    GD   lr = 0.00010376
+    SGD  lr = 0.00000451
+*/
+
+/*
+    numeric_features
+    numeric_scaled
+    ohe_scaled
+    ohe_scaled_perc
+*/
+
 int main(int argc, char *argv[])
 {
-    std::ifstream file("../" + std::string(argv[1]));
-    if (!file)
+    // std::ifstream file("../" + std::string(argv[1]));
+    std::ifstream file_x_train("../data/numeric_scaled/x_train.csv");
+    std::ifstream file_y_train("../data/numeric_scaled/y_train.csv");
+    std::ifstream file_x_test("../data/numeric_scaled/x_test.csv");
+    std::ifstream file_y_test("../data/numeric_scaled/y_test.csv");
+    if (!file_x_train || !file_y_train || !file_x_test || !file_y_test)
     {
-        puts("kdnf");
+        puts("dknf");
         return 0;
     }
-    Linalg::Matrix<double> dataset = Linalg::ReadCSV(file);
-    dataset.Show("dataset");
-    
-    auto [X_train, y_train] = Linalg::SplitVertically(dataset, dataset.GetCols() - 1);
+    Linalg::Matrix<double> X_train = Linalg::ReadCSV(file_x_train);
+    Linalg::Matrix<double> y_train = Linalg::ReadCSV(file_y_train);
+    Linalg::Matrix<double> X_test = Linalg::ReadCSV(file_x_test);
+    Linalg::Matrix<double> y_test = Linalg::ReadCSV(file_y_test);
 
+
+    // без этого действия numeric_scaled выдавало MAE = 1e5
+    // с ним сразу 2.4e4
     X_train.AddCol(1);
 
-    X_train.Show("X");
-    y_train.Show("y");
-
-    SGD model(0.00000451);
-    // GradientDescent model(0.00010376);
+    // SGD model(0.0000000000106);
+    SGD model(0.01);
     model.Fit(X_train, y_train);
 
 
-    Linalg::Matrix<double> y_pred = model.Predict({{16, 79, 0, 1}});
-    y_pred.Show();
+    // Linalg::Matrix<double> y_pred = model.Predict({{16, 79, 0, 1}});
+    // y_pred.Show();
     
 
 

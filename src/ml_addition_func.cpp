@@ -2,19 +2,19 @@
 #include "matrix.h"
 
 // [no-mean] Absolute error
-double SumErr(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> const &y_train, Linalg::Matrix<double> const &w)
+double AE(Linalg::Matrix<double> const &y, Linalg::Matrix<double> const &y_pred)
 {
-    return (X_train * w - y_train).Abs().Sum();
+    return (y_pred - y).Abs().Sum();
 }
 
-double MSE(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> const &y_train, Linalg::Matrix<double> const &w)
+double MSE(Linalg::Matrix<double> const &y, Linalg::Matrix<double> const &y_pred)
 {
-    return (X_train * w - y_train).Sqr().Mean();
+    return (y_pred - y).Sqr().Mean();
 }
 
-double MAE(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> const &y_train, Linalg::Matrix<double> const &w)
+double MAE(Linalg::Matrix<double> const &y, Linalg::Matrix<double> const &y_pred)
 {
-    return (X_train * w - y_train).Abs().Mean();
+    return (y_pred - y).Abs().Mean();
 }
 
 
@@ -22,18 +22,21 @@ Linalg::Matrix<double> WeightsMinErr(Linalg::Matrix<double> const &X_train, Lina
 {
     std::random_device rd;
     std::mt19937 rnd(rd());
-    std::uniform_real_distribution<> dist(-2000, 2000);
-    Linalg::Matrix<double> minW(X_train.GetCols(), 1); // fill 0
-    double minSumErr = SumErr(X_train, y_train, minW);
-    for (size_t i = 0; i < 1000; ++i)
+    std::uniform_real_distribution<> dist(-10000, 30000);
+    Linalg::Matrix<double> minW(X_train.GetCols(), 1, 0); // fill 0
+    double minSumErr = AE(X_train * minW, y_train);
+    double curSumErr = 0;
+    for (size_t i = 0; i < 100; ++i)
     {
         Linalg::Matrix<double> curW(X_train.GetCols(), 1);
         for (size_t j = 0; j < X_train.GetCols(); ++j)
         {
             curW[j][0] = dist(rnd);
         }
-        if (SumErr(X_train, y_train, curW) < minSumErr)
+        if ((curSumErr = AE(X_train * curW, y_train)) < minSumErr)
         {
+            puts("<");
+            minSumErr = curSumErr;
             minW = curW;
         }
     } 

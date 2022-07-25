@@ -13,7 +13,7 @@ void GradientDescent::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<
     assert(X_train.GetRows() == y_train.GetRows());
     assert(X_train.GetRows() == y_train.GetRows());
     w = WeightsMinErr(X_train, y_train);
-    double originalErr = SumErr(X_train, y_train, w);
+    double originalErr = AE(X_train * w, y_train);
     // double end = 10000;
     // double start = 1000;
     // double clr = 0.0001;
@@ -58,8 +58,8 @@ void GradientDescent::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<
         // sleep(1);
     }
     w.Show("\t\tweights");
-    std::cout << "SumErr = " << err.Abs().Sum() << std::endl;
-    std::cout << "original SumErr = " << originalErr << std::endl; 
+    std::cout << "AE = " << err.Abs().Sum() << std::endl;
+    std::cout << "original AE = " << originalErr << std::endl; 
     std::cout << "Itarations = " << i << std::endl;
 }
 

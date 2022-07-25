@@ -12,6 +12,7 @@ namespace Linalg
     template <class U>
     std::pair<Matrix<U>, Matrix<U>> SplitVertically(Matrix<U> const &original, size_t nPart1Cols);
 
+    // попробовать написать для n разделений
     template <class U>
     std::pair<Matrix<U>, Matrix<U>> SplitHorizontally(Matrix<U>const &original, size_t nPart1Rows);
 }
@@ -248,7 +249,7 @@ void Matrix<U>::Show(std::string message) const
     {
         for (U const &elem : row)
         {
-            std::cout << std::setw(5) <<  elem << " "; 
+            std::cout << std::setw(10) << std::setprecision(3) <<  elem << " "; 
         }
         std::cout << std::endl;
     }
@@ -271,10 +272,15 @@ Matrix<U> Matrix<U>::T() const
 template <class U>
 U Matrix<U>::Sum() const
 {
-    return std::accumulate(matrix.begin(), matrix.end(), 0, [](U init, std::vector<U> const &vec){
-        U sum = std::accumulate(vec.begin(), vec.end(), 0);
-        return init + sum;
-    });
+    double sum = 0;
+    for (auto const &row : matrix)
+    {
+        for (U const &elem : row)
+        {
+            sum += elem;
+        }
+    }
+    return sum;
 }
 
 template <class U>
