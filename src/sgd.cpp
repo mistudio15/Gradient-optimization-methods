@@ -3,20 +3,21 @@
 
 void SGD::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> const &y_train) 
 {
+    assert(X_train.GetRows() == y_train.GetRows());
     // лучше перемешивание делать в вызывающей прогармме, потому что иначе нужно создавать копию датасета
     std::mt19937 rdnX(123);
     std::mt19937 rdnY(123);
     Linalg::Matrix<double> X_copy = X_train;
     Linalg::Matrix<double> y_copy = y_train;
-    std::shuffle(X_copy.Data().begin(), X_copy.Data().end(), rdnX);
-    std::shuffle(y_copy.Data().begin(), y_copy.Data().end(), rdnY);
+
+    std::shuffle(X_copy.IterRow(0), X_copy.IterRow(X_copy.GetRows()), rdnX);
+    std::shuffle(y_copy.IterRow(0), y_copy.IterRow(X_copy.GetRows()), rdnY);
     
     w = WeightsMinErr(X_copy, y_copy);
     double originalErr = SumErr(X_copy, y_copy, w);
     double Q = MSE(X_copy, y_copy, w);
     double prevQ = 0;
 
-    
     Linalg::Matrix<double> f;
     Linalg::Matrix<double> err;
     Linalg::Matrix<double> grad;
@@ -26,8 +27,9 @@ void SGD::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> cons
     double fr = 0.04;
     // при B = 1 бодро спускается к минимуму
     size_t i = 0;
-    auto itX = X_copy.Data().cbegin();
-    auto itY = y_copy.Data().cbegin();
+
+    auto itX = X_copy.cIterRow(0);
+    auto itY = y_copy.cIterRow(0);
     for (; i < N; ++i)
     {
         // - реализовать случайный выбор B объектов из выбоки
@@ -43,7 +45,7 @@ void SGD::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> cons
         }
         if (abs(prevQ - Q) == 0) break;
 
-        // std::cout << "Q = " << Q << " prevQ = " << prevQ << std::endl;
+        std::cout << "Q = " << Q << " prevQ = " << prevQ << std::endl;
         prevQ = Q;
 
         // sleep(1);

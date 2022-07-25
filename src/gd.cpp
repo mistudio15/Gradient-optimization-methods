@@ -11,6 +11,7 @@ int sign(T value)
 void GradientDescent::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> const &y_train) 
 {
     assert(X_train.GetRows() == y_train.GetRows());
+    assert(X_train.GetRows() == y_train.GetRows());
     w = WeightsMinErr(X_train, y_train);
     double originalErr = SumErr(X_train, y_train, w);
     // double end = 10000;

@@ -4,6 +4,21 @@
 
 namespace Linalg
 {
+    template <class U>
+    class Matrix;
+    
+    Matrix<double> ReadCSV(std::istream &file);
+    
+    template <class U>
+    std::pair<Matrix<U>, Matrix<U>> SplitVertically(Matrix<U> const &original, size_t nPart1Cols);
+
+    template <class U>
+    std::pair<Matrix<U>, Matrix<U>> SplitHorizontally(Matrix<U>const &original, size_t nPart1Rows);
+}
+
+
+namespace Linalg
+{
 
 template <class U>
 class Matrix
@@ -39,28 +54,40 @@ public:
     void AddCol(U fill_value);
     void AddCol(std::vector<U> const &col);
 
-    void Show(std::string message = std::string{}) const;
-    Matrix T() const;
-    U Sum() const;
-    double Mean() const;
-    Matrix<U> Abs() const;
-    Matrix<U> Sqr() const;
-    size_t GetRows() const { return nRows; }
-    size_t GetCols() const { return nCols; }
-    std::vector<std::vector<U>> &Data() { return matrix; }
+    void       Show(std::string message = std::string{}) const;
 
-    Matrix operator*(Matrix const &other) const;
-    Matrix &operator-=(Matrix const &other);
-    Matrix &operator+=(Matrix const &other);
-    std::vector<U> &operator[](int index) const;
+    U          Sum()      const;
+    Matrix     T()        const;
+    double     Mean()     const;
+    Matrix<U>  Abs()      const;
+    Matrix<U>  Sqr()      const;
+    size_t     GetRows()  const { return nRows; }
+    size_t     GetCols()  const { return nCols; }
+
+    std::vector<std::vector<U>> &Data() { return matrix; }
+    typename std::vector<std::vector<U>>::const_iterator cIterRow(size_t indexRow) const
+    { return matrix.begin() + indexRow;             }
+    typename std::vector<std::vector<U>>::iterator IterRow(size_t indexRow)
+    { return matrix.begin() + indexRow;             }
+    typename std::vector<U>::const_iterator cIterCell(size_t indexRow, size_t indexCell) const
+    { return matrix[indexRow].begin() + indexCell;  }
+    typename std::vector<U>::iterator IterCell(size_t indexRow, size_t indexCell) 
+    { return matrix[indexRow].begin() + indexCell;  }
+
+
+    Matrix            operator*    (Matrix const &other) const;
+    Matrix           &operator-=   (Matrix const &other);
+    Matrix           &operator+=   (Matrix const &other);
+    std::vector<U>   &operator[]   (int index);
+    std::vector<U>    operator[]   (int index) const;
     template <class V>
-    Matrix &operator*=(V a);
+    Matrix           &operator*=   (V a);
     template <class V>
-    Matrix &operator/=(V a);
+    Matrix           &operator/=   (V a);
 private:
-    std::vector<std::vector<U>> matrix;
-    size_t nRows = 0;
-    size_t nCols = 0;
+    std::vector<std::vector<U>>    matrix;
+    size_t                         nRows   = 0;
+    size_t                         nCols   = 0;
     void swap(Matrix<U> &other);
 };
 
@@ -154,10 +181,17 @@ Matrix<U> operator/(Matrix<U> left, V a)
 // member
 
 template <class U>
-std::vector<U> &Matrix<U>::operator[](int index) const
+std::vector<U> &Matrix<U>::operator[](int index)
 {
-    return const_cast<std::vector<U> &>(matrix[index]);
+    return matrix[index];
 }
+
+template <class U>
+std::vector<U> Matrix<U>::operator[](int index) const
+{
+    return matrix[index];
+}
+
 
 // на курсовой реализовать Штрассена при большой матрице
 // происходит ли копирование объекта при возвращение или работает RVO
@@ -188,13 +222,6 @@ Matrix<U>& Matrix<U>::operator=(Matrix<U> other)
     swap(other);
     return *this;
 }
-
-// template <class U>
-// Matrix<U>& Matrix<U>::operator=(std::vector<U> vec)
-// {
-//     swap(other);
-//     return *this;
-// }
 
 template <class U>
 void Matrix<U>::Assign(size_t nRows_, size_t nCols_, U fill_value)
@@ -352,6 +379,34 @@ void Matrix<U>::AddCol(std::vector<U> const &col)
         matrix[i].push_back(col[i]);
     }    
     nCols++;
+}
+
+template <class U>
+std::pair<Matrix<U>, Matrix<U>> SplitVertically(Matrix<U> const &original, size_t nPart1Cols)
+{
+    assert(nPart1Cols < original.GetCols());
+    size_t nPart2Cols = original.GetCols() - nPart1Cols;
+    Matrix<U> leftMatrix(original.GetRows(), nPart1Cols);
+    Matrix<U> rightMatrix(original.GetRows(), nPart2Cols);
+    for (size_t i = 0; i < original.GetRows(); ++i)
+    {
+        // copy до элемента, который следует после последнего
+        std::copy(original.cIterCell(i, 0), original.cIterCell(i, nPart1Cols), leftMatrix[i].begin());
+        std::copy(original.cIterCell(i, nPart1Cols), original.cIterCell(i, nPart1Cols + nPart2Cols), rightMatrix[i].begin());
+    }
+    return std::make_pair(leftMatrix, rightMatrix);
+}
+
+template <class U>
+std::pair<Matrix<U>, Matrix<U>> SplitHorizontally(Matrix<U> const &original, size_t nPart1Rows)
+{
+    assert(nPart1Rows < original.GetRows());
+    size_t nPart2Rows = original.GetRows() - nPart1Rows;
+    Matrix<U> topMatrix(nPart1Rows, original.GetCols());
+    Matrix<U> downMatrix(nPart2Rows, original.GetCols());
+    std::copy(original.cIterRow(0), original.cIterRow(nPart1Rows), topMatrix.IterRow(0));
+    std::copy(original.cIterRow(nPart1Rows), original.cIterRow(nPart1Rows + nPart2Rows), downMatrix.IterRow(0));
+    return std::make_pair(topMatrix, downMatrix);
 }
 
 }
