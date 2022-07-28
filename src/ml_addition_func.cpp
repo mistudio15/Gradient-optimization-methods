@@ -35,7 +35,6 @@ Linalg::Matrix<double> WeightsMinErr(Linalg::Matrix<double> const &X_train, Lina
         }
         if ((curSumErr = AE(X_train * curW, y_train)) < minSumErr)
         {
-            puts("<");
             minSumErr = curSumErr;
             minW = curW;
         }

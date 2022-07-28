@@ -7,7 +7,7 @@ Linalg::Matrix<double> Linalg::ReadCSV(std::istream &file)
     {
         std::string features;
         std::getline(file, features);
-        // head1, head2, head3, head4 - 3 commas - 4 headers
+        // "head1, head2, head3, head4" - 3 commas - 4 headers
         nHeaders = std::count(features.begin(), features.end(), ','); 
         ++nHeaders;
     }

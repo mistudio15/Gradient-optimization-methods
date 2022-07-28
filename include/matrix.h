@@ -26,23 +26,29 @@ class Matrix
 {
 public:
     // constructor
+    // Matrix() = default;
     Matrix() = default;
+    
     Matrix(size_t nRows_, size_t nCols_, U fill_value = 0) : matrix(nRows_, std::vector<U>(nCols_, fill_value)), nRows(nRows_), nCols(nCols_) {};
+    
     // SetData проверяет матрицу на "прямоугольность"
     Matrix(typename std::vector<std::vector<U>>::const_iterator it_first, typename std::vector<std::vector<U>>::const_iterator it_last) { SetData(it_first, it_last); };
-    explicit Matrix(std::vector<std::vector<U>> const &matrix_) { SetData(matrix_.begin(), matrix_.end()); };
+    
+    explicit Matrix(std::vector<std::vector<U>> const &matrix_) { SetData(matrix_.begin(), matrix_.end());};
 
     // не explicit для model.Predict({{{16, 79, 0, 1}}})
     Matrix(std::initializer_list<std::initializer_list<U>> const &matrix_) { SetData(matrix_.begin(), matrix_.end()); }
 
     // move   (+ может, стоит для vector или init_list сделать)
-    Matrix(Matrix &&other) : matrix(std::move(other.matrix)), nRows(other.nRows), nCols(other.nCols) {};
+    Matrix(Matrix &&other) noexcept { swap(other); };
+
+    operator bool() { return matrix.size() != 0; }
 
     // copy
     Matrix(Matrix<U> const &other) : matrix(other.matrix), nRows(other.nRows), nCols(other.nCols) {};
 
     // =
-    Matrix& operator=(Matrix<U> other);
+    Matrix& operator=(Matrix<U> other) noexcept;
 
     void Assign(size_t nRows_, size_t nCols_, U fill_value = 0);
     
@@ -89,7 +95,7 @@ private:
     std::vector<std::vector<U>>    matrix;
     size_t                         nRows   = 0;
     size_t                         nCols   = 0;
-    void swap(Matrix<U> &other);
+    void swap(Matrix<U> &other) noexcept;
 };
 
 template <class U>
@@ -97,8 +103,10 @@ Matrix<U> &Matrix<U>::operator+=(Matrix const &other)
 {
     assert(this->GetRows() == other.GetRows() && this->GetCols() == other.GetCols());
     // сложение matrix и other.matrix и запись в matrix
+    
     std::transform(matrix.begin(), matrix.end(), other.matrix.cbegin(), matrix.begin(), [](std::vector<U> &vecLeft, std::vector<U> const &vecRight){
         // сложение vecLeft и vecRight и запись в vecLeft
+
         std::transform(vecLeft.cbegin(), vecLeft.cend(), vecRight.cbegin(), vecLeft.begin(), std::plus<U>{});
         return vecLeft;
     });
@@ -167,9 +175,9 @@ Matrix<U> operator*(Matrix<U> left, V a)
 }
 
 template <class U, class V>
-Matrix<U> operator*(V a, Matrix<U> const &right)
+Matrix<U> operator*(V a, Matrix<U> right)
 {
-    return right * a;
+    return right *= a;
 }
 
 
@@ -218,9 +226,10 @@ Matrix<U> Matrix<U>::operator*(Matrix<U> const &other) const
 }
 
 template <class U>
-Matrix<U>& Matrix<U>::operator=(Matrix<U> other)
+Matrix<U>& Matrix<U>::operator=(Matrix<U> other) noexcept
 {
-    swap(other);
+    swap(other);    
+
     return *this;
 }
 
@@ -233,7 +242,7 @@ void Matrix<U>::Assign(size_t nRows_, size_t nCols_, U fill_value)
 }
 
 template <class U>
-void Matrix<U>::swap(Matrix<U> &other)
+void Matrix<U>::swap(Matrix<U> &other) noexcept
 {
     std::swap(matrix, other.matrix);
     std::swap(nRows, other.nRows);
@@ -369,6 +378,7 @@ void Matrix<U>::AddRow(std::vector<U> const &row)
 template <class U>
 void Matrix<U>::AddCol(U fill_value)
 {
+    assert(nRows > 0);
     for (auto &row : matrix)
     {
         row.push_back(fill_value);
@@ -379,6 +389,7 @@ void Matrix<U>::AddCol(U fill_value)
 template <class U>
 void Matrix<U>::AddCol(std::vector<U> const &col)
 {
+    assert(nRows > 0);
     assert(col.size() == GetRows());
     for (size_t i = 0; i < col.size(); ++i)
     {
@@ -400,7 +411,8 @@ std::pair<Matrix<U>, Matrix<U>> SplitVertically(Matrix<U> const &original, size_
         std::copy(original.cIterCell(i, 0), original.cIterCell(i, nPart1Cols), leftMatrix[i].begin());
         std::copy(original.cIterCell(i, nPart1Cols), original.cIterCell(i, nPart1Cols + nPart2Cols), rightMatrix[i].begin());
     }
-    return std::make_pair(leftMatrix, rightMatrix);
+    // std::move здесь решает (copy ctor не вызывается)
+    return std::make_pair(std::move(leftMatrix), std::move(rightMatrix));
 }
 
 template <class U>

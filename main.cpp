@@ -44,15 +44,14 @@
 */
 
 int main(int argc, char *argv[])
-{
-    // std::ifstream file("../" + std::string(argv[1]));
+{   
+
     std::ifstream file_x_train("../data/numeric_scaled/x_train.csv");
     std::ifstream file_y_train("../data/numeric_scaled/y_train.csv");
     std::ifstream file_x_test("../data/numeric_scaled/x_test.csv");
     std::ifstream file_y_test("../data/numeric_scaled/y_test.csv");
     if (!file_x_train || !file_y_train || !file_x_test || !file_y_test)
     {
-        puts("dknf");
         return 0;
     }
     Linalg::Matrix<double> X_train = Linalg::ReadCSV(file_x_train);
@@ -60,18 +59,34 @@ int main(int argc, char *argv[])
     Linalg::Matrix<double> X_test = Linalg::ReadCSV(file_x_test);
     Linalg::Matrix<double> y_test = Linalg::ReadCSV(file_y_test);
 
+    std::random_device rd;
+    std::mt19937 rdnX(rd());
+    std::mt19937 rdnY(rdnX);
+    std::mt19937 rdnXtest(rdnX);
+    std::mt19937 rdnYtest(rdnX);
+
+
+    std::shuffle(X_train.IterRow(0), X_train.IterRow(X_train.GetRows()), rdnX);
+    std::shuffle(y_train.IterRow(0), y_train.IterRow(y_train.GetRows()), rdnY);
+    std::shuffle(X_test.IterRow(0), X_test.IterRow(X_test.GetRows()), rdnXtest);
+    std::shuffle(y_test.IterRow(0), y_test.IterRow(y_test.GetRows()), rdnYtest);
 
     // без этого действия numeric_scaled выдавало MAE = 1e5
     // с ним сразу 2.4e4
     X_train.AddCol(1);
 
-    // SGD model(0.0000000000106);
     SGD model(0.01);
     model.Fit(X_train, y_train);
+
+    X_test.AddCol(1);
+    std::cout << std::setw(20) << "MAE test = " << MAE(y_test, model.Predict(X_test)) << std::endl;
+
+    
 
 
     // Linalg::Matrix<double> y_pred = model.Predict({{16, 79, 0, 1}});
     // y_pred.Show();
+
     
 
 
