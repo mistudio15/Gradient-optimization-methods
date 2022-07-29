@@ -9,13 +9,17 @@ using std::endl;
 
 double FindExtremum(std::function<double(double)> const &df, std::function<double(double const &, double const &)> const &BinOp, double eps = 0.001);
 
-double AE(Linalg::Matrix<double> const &y, Linalg::Matrix<double> const &y_pred);
 
 Linalg::Matrix<double> WeightsMinErr(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> const &y_train);
 
+double AE(Linalg::Matrix<double> const &y, Linalg::Matrix<double> const &y_pred);
+double AE(Linalg::Matrix<double> const &err);
+
 double MSE(Linalg::Matrix<double> const &y, Linalg::Matrix<double> const &y_pred);
+double MSE(Linalg::Matrix<double> const &err);
 
 double MAE(Linalg::Matrix<double> const &y, Linalg::Matrix<double> const &y_pred);
+double MAE(Linalg::Matrix<double> const &err);
 
 class LinearModel
 {

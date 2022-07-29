@@ -4,17 +4,38 @@
 // [no-mean] Absolute error
 double AE(Linalg::Matrix<double> const &y, Linalg::Matrix<double> const &y_pred)
 {
-    return (y_pred - y).Abs().Sum();
+    assert(y.GetCols() == 1 && y_pred.GetCols() == 1 && y.GetRows() == y_pred.GetRows());
+    return (y_pred - y).Abs().Sum()[0][0];
 }
 
 double MSE(Linalg::Matrix<double> const &y, Linalg::Matrix<double> const &y_pred)
 {
-    return (y_pred - y).Sqr().Mean();
+    assert(y.GetCols() == 1 && y_pred.GetCols() == 1 && y.GetRows() == y_pred.GetRows());
+    return (y_pred - y).Sqr().Mean()[0][0];
 }
 
 double MAE(Linalg::Matrix<double> const &y, Linalg::Matrix<double> const &y_pred)
 {
-    return (y_pred - y).Abs().Mean();
+    assert(y.GetCols() == 1 && y_pred.GetCols() == 1 && y.GetRows() == y_pred.GetRows());
+    return (y_pred - y).Abs().Mean()[0][0];
+}
+
+double AE(Linalg::Matrix<double> const &err)
+{
+    assert(err.GetCols() == 1);
+    return err.Abs().Sum()[0][0];
+}
+
+double MSE(Linalg::Matrix<double> const &err)
+{
+    assert(err.GetCols() == 1);
+    return err.Sqr().Mean()[0][0];
+}
+
+double MAE(Linalg::Matrix<double> const &err)
+{
+    assert(err.GetCols() == 1);
+    return err.Abs().Mean()[0][0];
 }
 
 

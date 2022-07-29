@@ -63,9 +63,9 @@ public:
 
     void       Show(std::string message = std::string{}) const;
 
-    U          Sum()      const;
+    Matrix     Sum()      const;
     Matrix     T()        const;
-    double     Mean()     const;
+    Matrix     Mean()     const;
     Matrix<U>  Abs()      const;
     Matrix<U>  Sqr()      const;
     size_t     GetRows()  const { return nRows; }
@@ -101,7 +101,7 @@ private:
 template <class U>
 Matrix<U> &Matrix<U>::operator+=(Matrix const &other)
 {
-    assert(this->GetRows() == other.GetRows() && this->GetCols() == other.GetCols());
+    assert(nRows == other.nRows && nCols == other.nCols);
     // сложение matrix и other.matrix и запись в matrix
     
     std::transform(matrix.begin(), matrix.end(), other.matrix.cbegin(), matrix.begin(), [](std::vector<U> &vecLeft, std::vector<U> const &vecRight){
@@ -116,7 +116,7 @@ Matrix<U> &Matrix<U>::operator+=(Matrix const &other)
 template <class U>
 Matrix<U> &Matrix<U>::operator-=(Matrix const &other)
 {
-    assert(this->GetRows() == other.GetRows() && this->GetCols() == other.GetCols());
+    assert(nRows == other.nRows && nCols == other.nCols);
 
     std::transform(matrix.begin(), matrix.end(), other.matrix.cbegin(), matrix.begin(), [](std::vector<U> &vecLeft, std::vector<U> const &vecRight){
         std::transform(vecLeft.cbegin(), vecLeft.cend(), vecRight.cbegin(), vecLeft.begin(), std::minus<U>{});
@@ -203,18 +203,17 @@ std::vector<U> Matrix<U>::operator[](int index) const
 
 
 // на курсовой реализовать Штрассена при большой матрице
-// происходит ли копирование объекта при возвращение или работает RVO
 template <class U>
 Matrix<U> Matrix<U>::operator*(Matrix<U> const &other) const 
 {
-    assert(this->GetCols() == other.GetRows());
-    Matrix matrixProd(this->GetRows(), other.GetCols());
-    for (size_t i = 0; i < this->GetRows(); ++i)
+    assert(nCols == other.nRows);
+    Matrix matrixProd(nRows, other.nCols);
+    for (size_t i = 0; i < nRows; ++i)
     {
-        for (size_t j = 0; j < other.GetCols(); ++j)
+        for (size_t j = 0; j < other.nCols; ++j)
         {
             U elem_i_j = 0; 
-            for (size_t k = 0; k < this->GetCols(); ++k)
+            for (size_t k = 0; k < nCols; ++k)
             {
                 elem_i_j += matrix[i][k] * other.matrix[k][j];
             }
@@ -229,7 +228,6 @@ template <class U>
 Matrix<U>& Matrix<U>::operator=(Matrix<U> other) noexcept
 {
     swap(other);    
-
     return *this;
 }
 
@@ -267,10 +265,10 @@ void Matrix<U>::Show(std::string message) const
 template <class U>
 Matrix<U> Matrix<U>::T() const
 {
-    Matrix<U> tMatrix(GetCols(), GetRows());
-    for (size_t i = 0; i < GetRows(); i++)
+    Matrix<U> tMatrix(nCols, nRows);
+    for (size_t i = 0; i < nRows; i++)
     {
-        for (size_t j = 0; j < GetCols(); j++)
+        for (size_t j = 0; j < nCols; j++)
         {
             tMatrix[j][i] = matrix[i][j];
         }
@@ -279,23 +277,24 @@ Matrix<U> Matrix<U>::T() const
 }
 
 template <class U>
-U Matrix<U>::Sum() const
+Matrix<U> Matrix<U>::Sum() const
 {
+    Matrix<U> sumMatrix(1, nCols);
     double sum = 0;
     for (auto const &row : matrix)
     {
-        for (U const &elem : row)
+        for (size_t i = 0; i < row.size(); ++i)
         {
-            sum += elem;
+            sumMatrix[0][i] += row[i];
         }
     }
-    return sum;
+    return sumMatrix;
 }
 
 template <class U>
-double Matrix<U>::Mean() const
+Matrix<U> Matrix<U>::Mean() const
 {
-    return static_cast<double>(Sum()) / (nRows * nCols);
+    return Sum() / static_cast<double>(nRows * nCols);
 }
 
 template <class U>
@@ -366,7 +365,7 @@ void Matrix<U>::SetData(std::initializer_list<std::initializer_list<U>> const &m
 template <class U>
 void Matrix<U>::AddRow(std::vector<U> const &row)
 {
-    assert(nRows == 0 || row.size() == GetCols());
+    assert(nRows == 0 || row.size() == nCols);
     matrix.push_back(row);
     if (nRows == 0)
     {
@@ -390,7 +389,7 @@ template <class U>
 void Matrix<U>::AddCol(std::vector<U> const &col)
 {
     assert(nRows > 0);
-    assert(col.size() == GetRows());
+    assert(col.size() == nRows);
     for (size_t i = 0; i < col.size(); ++i)
     {
         matrix[i].push_back(col[i]);
@@ -401,11 +400,11 @@ void Matrix<U>::AddCol(std::vector<U> const &col)
 template <class U>
 std::pair<Matrix<U>, Matrix<U>> SplitVertically(Matrix<U> const &original, size_t nPart1Cols)
 {
-    assert(nPart1Cols < original.GetCols());
-    size_t nPart2Cols = original.GetCols() - nPart1Cols;
-    Matrix<U> leftMatrix(original.GetRows(), nPart1Cols);
-    Matrix<U> rightMatrix(original.GetRows(), nPart2Cols);
-    for (size_t i = 0; i < original.GetRows(); ++i)
+    assert(nPart1Cols < original.nCols);
+    size_t nPart2Cols = original.nCols - nPart1Cols;
+    Matrix<U> leftMatrix(original.nRows, nPart1Cols);
+    Matrix<U> rightMatrix(original.nRows, nPart2Cols);
+    for (size_t i = 0; i < original.nRows; ++i)
     {
         // copy до элемента, который следует после последнего
         std::copy(original.cIterCell(i, 0), original.cIterCell(i, nPart1Cols), leftMatrix[i].begin());
@@ -418,10 +417,10 @@ std::pair<Matrix<U>, Matrix<U>> SplitVertically(Matrix<U> const &original, size_
 template <class U>
 std::pair<Matrix<U>, Matrix<U>> SplitHorizontally(Matrix<U> const &original, size_t nPart1Rows)
 {
-    assert(nPart1Rows < original.GetRows());
-    size_t nPart2Rows = original.GetRows() - nPart1Rows;
-    Matrix<U> topMatrix(nPart1Rows, original.GetCols());
-    Matrix<U> downMatrix(nPart2Rows, original.GetCols());
+    assert(nPart1Rows < original.nRows);
+    size_t nPart2Rows = original.nRows - nPart1Rows;
+    Matrix<U> topMatrix(nPart1Rows, original.nCols);
+    Matrix<U> downMatrix(nPart2Rows, original.nCols);
     std::copy(original.cIterRow(0), original.cIterRow(nPart1Rows), topMatrix.IterRow(0));
     std::copy(original.cIterRow(nPart1Rows), original.cIterRow(nPart1Rows + nPart2Rows), downMatrix.IterRow(0));
     return std::make_pair(topMatrix, downMatrix);

@@ -75,6 +75,8 @@ int main(int argc, char *argv[])
     // с ним сразу 2.4e4
     X_train.AddCol(1);
 
+    // GD 0.1
+    // SGD 0.01
     SGD model(0.01);
     model.Fit(X_train, y_train);
 

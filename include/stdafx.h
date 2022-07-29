@@ -18,3 +18,4 @@
 #include <random>
 #include <initializer_list>
 #include <chrono>
+#include <exception>

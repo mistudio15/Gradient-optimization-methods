@@ -10,14 +10,13 @@ void SGD::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> cons
     double originalErr = MAE(X_train * w, y_train);
     double Q = MSE(X_train * w, y_train);
     // std::cout << "Q : " << Q << std::endl;
-    double prevQ = 0;
+    double prevQ = Q;
 
     Linalg::Matrix<double> f;
     Linalg::Matrix<double> err;
     Linalg::Matrix<double> grad;
-    double prevErr = 0;
     int N = 10000;
-    int B = 100;
+    int B = 40;
     double fr = 0.005;
 
     auto itX = X_train.cIterRow(0);
@@ -35,12 +34,11 @@ void SGD::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> cons
             y_batch.SetData(itY + (j - B), itY + j);
             f = X_batch * w;
             err = std::move(f) - y_batch;
-            // / X_batch.GetRows() это действие принесло 2.14 на numeric_scaled (было 2.36)
+            // "делить на X_batch.GetRows()" - это действие принесло 2.14 на numeric_scaled (было 2.36)
             grad = 2 * (X_batch.T() * err) / X_batch.GetRows();
             w -= lr * std::move(grad);
-            Q = fr * err.Sqr().Mean() + (1 - fr) * Q;
+            Q = fr * MSE(err) + (1 - fr) * Q;
         }
-        // std::cout << "Q = " << Q  << std::endl;
         if (std::abs(prevQ - Q) < 100000000) 
         {
             break;
@@ -49,7 +47,7 @@ void SGD::Fit(Linalg::Matrix<double> const &X_train, Linalg::Matrix<double> cons
     }
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed_seconds = end-start;
-    std::cout << std::setw(20) << "elapsed time = " << elapsed_seconds.count() << "s\n";
+    std::cout << std::setw(20) << "Elapsed time = " << elapsed_seconds.count() << std::endl;
     std::cout << std::setw(20) << "MAE = " << MAE(X_train * w, y_train) << std::endl;
     std::cout << std::setw(20) << "original MAE = " << originalErr << std::endl; 
     std::cout << std::setw(20) << "Itarations = " << i << std::endl;
